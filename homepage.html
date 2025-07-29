@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Welcome - <?= htmlspecialchars($uname) ?></title>
+  <style>
+    * {
+      box-sizing: border-box;
+      scrollbar-width: none;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #1e1e2f;
+      overflow: hidden;
+      color: white;
+    }
+
+    ::-webkit-scrollbar {
+      display: none;
+    }
+
+    header {
+      background: #1e1e2f;
+      padding: 15px 25px;
+      font-size: 18px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header .left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header img {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .message {
+      text-align: center;
+      background-color: #3a3a4a;
+      padding: 10px;
+      font-size: 14px;
+      color: #ff6b6b;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 25% 42% 30%;
+      height: calc(100vh - 80px);
+      gap: 1%;
+    }
+
+    .column {
+      padding: 20px;
+      overflow-y: auto;
+      height: 100%;
+    }
+
+    .column:first-child {
+      background: #2d2d3a;
+    }
+
+    .center-column {
+      background: #1e1e2f;
+    }
+
+    .column:last-child {
+      background: #1e1e2f;
+    }
+
+    .add-btn {
+      padding: 8px 14px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+    .card {
+      background: #3a3a4a;
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 6px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      color: white;
+      text-decoration: none;
+    }
+
+    .card img {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+
+    .card .info {
+      flex-grow: 1;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .section-title {
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .search-box {
+      background-color: #2c2c3c;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      padding: 6px 10px;
+    }
+
+    .edit-link {
+      float: right;
+      color: #ffcc00;
+      font-size: 18px;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="left">
+    <img src="<?= htmlspecialchars($userImage) ?>" alt="user image">
+    Hello, <?= htmlspecialchars($uname) ?>! 🎵
+  </div>
+  <div style="display: flex; gap: 10px; align-items: center;">
+    <!-- ✅ Düzeltilmiş: generalSQL.php'ye gider -->
+    <form method="GET" action="generalSQL.php">
+      <button class="add-btn" style="background:#28a745;">Go to GeneralSQL Page</button>
+    </form>
+    <form method="POST" action="logout.php">
+      <button class="add-btn" style="background:#dc3545;">Logout</button>
+    </form>
+  </div>
+</header>
+
+
+<?php if ($notFound): ?>
+  <div class="message">❗ No matching playlist or song found.</div>
+<?php endif; ?>
+
+<div class="container">
+<!-- SOL SÜTUN: Playlistler -->
+<div class="column" style="display: flex; flex-direction: column; overflow: hidden;">
+  <div style="text-align: center; margin-bottom: 20px;">
+    <form method="POST" action="createplaylist.php">
+      <button class="add-btn" style="padding: 14px 24px; font-size: 18px; font-weight: bold;">+ Create Playlist</button>
+    </form>
+  </div>
+
+  <div style="flex-shrink: 0; padding-bottom: 10px;">
+    <div class="section-header" style="margin-bottom: 10px;">
+      <div class="section-title" style="font-size: 18px;">Your Playlists</div>
+    </div>
+    <form method="GET" action="">
+      <input class="search-box" type="text" name="playlist_search" placeholder="Search your playlists..." value="<?= htmlspecialchars($_GET['playlist_search'] ?? '') ?>">
+      <button class="add-btn" type="submit">Search</button>
+    </form>
+  </div>
+
+  <div style="flex: 1; overflow-y: auto; margin-top: 10px;">
+    <?php
+    $searchTerm = strtolower(trim($_GET['playlist_search'] ?? ''));
+    $index = 1;
+    mysqli_data_seek($playlists, 0);
+    while($pl = $playlists->fetch_assoc()):
+      if ($searchTerm && stripos($pl['title'], $searchTerm) === false) continue;
+      $playlistId = $pl['playlist_id'];
+      $countRes = $conn->query("SELECT COUNT(*) AS song_count FROM PLAYLIST_SONGS WHERE playlist_id = $playlistId");
+      $songCount = $countRes->fetch_assoc()['song_count'] ?? 0;
+    ?>
+      <a class="card" href="playlistpage.php?playlist_id=<?= $playlistId ?>">
+        <img src="<?= $pl['image'] ?>" alt="playlist">
+        <div class="info">
+          <strong style="font-size: 16px;">Playlist <?= $index++ ?></strong><br>
+          <small><b>By:</b> <?= htmlspecialchars($uname) ?></small><br>
+          <small><b>Created:</b> <?= !empty($pl['date_created']) ? date("Y-m-d", strtotime($pl['date_created'])) : 'Unknown' ?></small><br>
+          <small><b>Songs:</b> <?= $songCount ?></small>
+        </div>
+      </a>
+    <?php endwhile; ?>
+  </div>
+</div>
+
+<!-- ORTA SÜTUN -->
+<div class="column center-column" style="display: flex; flex-direction: column; gap: 30px; overflow: hidden;">
+  <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+    <div class="section-header">
+      <div class="section-title">Top Ranked Songs</div>
+      <form method="GET" action="" style="display: flex; gap: 8px;">
+        <input class="search-box" type="text" name="song_search" placeholder="Search a song..." value="<?= htmlspecialchars($_GET['song_search'] ?? '') ?>">
+        <button class="add-btn" type="submit">Search</button>
+      </form>
+    </div>
+    <div style="flex: 1; overflow-y: auto;">
+      <?php
+      $songSearch = strtolower(trim($_GET['song_search'] ?? ''));
+      mysqli_data_seek($topSongs, 0);
+      while($top = $topSongs->fetch_assoc()):
+        if ($songSearch && stripos($top['title'], $songSearch) === false) continue;
+      ?>
+        <a class="card" href="currentmusic.php?song_id=<?= $top['song_id'] ?>">
+          <img src="<?= $top['image'] ?>" alt="top song">
+          <div class="info">
+            <strong><?= $top['title'] ?></strong><br>
+            <small><?= $top['genre'] ?> | <?= $top['artist_name'] ?></small>
+          </div>
+        </a>
+      <?php endwhile; ?>
+    </div>
+  </div>
+
+  <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+    <div class="section-header">
+      <div class="section-title">Artists From Your Country</div>
+      <form method="GET" action="" style="display: flex; gap: 8px;">
+        <input class="search-box" type="text" name="artist_search" placeholder="Search an artist..." value="<?= htmlspecialchars($_GET['artist_search'] ?? '') ?>">
+        <button class="add-btn" type="submit">Search</button>
+      </form>
+    </div>
+    <div style="flex: 1; overflow-y: auto;">
+      <?php
+      $artistSearch = strtolower(trim($_GET['artist_search'] ?? ''));
+      mysqli_data_seek($artists, 0);
+      while($a = $artists->fetch_assoc()):
+        if ($artistSearch && stripos($a['name'], $artistSearch) === false) continue;
+      ?>
+        <a class="card" href="artistpage.php?artist_id=<?= $a['artist_id'] ?>">
+          <img src="<?= $a['image'] ?>" alt="artist">
+          <div class="info">
+            <strong><?= $a['name'] ?></strong><br>
+            <small><?= $a['genre'] ?></small>
+          </div>
+        </a>
+      <?php endwhile; ?>
+    </div>
+  </div>
+</div>
+
+<!-- SAĞ SÜTUN -->
+<div class="column" style="display: flex; flex-direction: column; overflow: hidden;">
+  <div class="section-header">
+    <div class="section-title">Recently Played</div>
+    <form method="GET" action="" style="display: flex; gap: 8px;">
+      <input class="search-box" type="text" name="history_search" placeholder="Search from history..." value="<?= htmlspecialchars($_GET['history_search'] ?? '') ?>">
+      <button class="add-btn" type="submit">Search</button>
+    </form>
+  </div>
+  <div style="flex: 1; overflow-y: auto; margin-top: 10px;">
+    <?php
+    $historySearch = strtolower(trim($_GET['history_search'] ?? ''));
+    mysqli_data_seek($songs, 0);
+    while($song = $songs->fetch_assoc()):
+      if ($historySearch && stripos($song['title'], $historySearch) === false) continue;
+    ?>
+      <a class="card" href="currentmusic.php?song_id=<?= $song['song_id'] ?>">
+        <img src="<?= $song['image'] ?>" alt="song">
+        <div class="info">
+          <strong><?= htmlspecialchars($song['title']) ?></strong><br>
+          <small><?= htmlspecialchars($song['genre']) ?> | <?= htmlspecialchars($song['artist_name']) ?></small>
+        </div>
+      </a>
+    <?php endwhile; ?>
+  </div>
+</div>
+
+</div>
+
+</body>
+</html>

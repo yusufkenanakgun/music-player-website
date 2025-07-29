@@ -1,0 +1,10 @@
+Pop
+Rock
+Jazz
+Rap
+Electronic
+Classical
+Hip-Hop
+Indie
+R&B
+Metal

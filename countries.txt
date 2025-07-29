@@ -1,0 +1,18 @@
+United States,US
+United Kingdom,GB
+Germany,DE
+France,FR
+Italy,IT
+Spain,ES
+Canada,CA
+China,CN
+Japan,JP
+India,IN
+Brazil,BR
+Australia,AU
+Netherlands,NL
+Mexico,MX
+Turkey,TR
+Saudi Arabia,SA
+Sweden,SE
+Switzerland,CH
